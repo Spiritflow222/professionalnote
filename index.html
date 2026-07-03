@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点石成金：Web可用性设计秘笈 - UX 读书笔记</title>
+    <!-- 引入高质感英文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-primary: #111111;
+            --text-secondary: #666666;
+            --accent-color: #ff3b30; 
+            --card-bg: #ffffff;
+            --easing: cubic-bezier(0.25, 1, 0.5, 1);
+            --card-radius: 24px; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* ---------------- 1. 首页 (Splash Screen) ---------------- */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            background: linear-gradient(135deg, rgba(15,15,18,0.9) 0%, rgba(30,30,35,0.8) 100%), 
+                        url('https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;
+            transition: opacity 1s var(--easing), visibility 1s var(--easing);
+        }
+
+        #welcome-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .welcome-content {
+            color: #ffffff;
+            animation: fadeInPreset 1.5s var(--easing);
+        }
+
+        .click-to-learn {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 16px;
+            font-weight: 300;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .welcome-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            line-height: 1.4;
+        }
+
+        /* ---------------- 2. 内容主体页面 ---------------- */
+        .main-content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 120px 24px;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1.2s var(--easing) 0.3s, transform 1.2s var(--easing) 0.3s;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        header {
+            margin-bottom: 100px;
+        }
+
+        .header-tag {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .main-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 2.2rem;
+            margin-bottom: 32px;
+            font-weight: 700;
+        }
+
+        .core-box {
+            padding: 8px 0;
+            background: transparent;
+            color: var(--accent-color);
+        }
+
+        .core-box p {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.7;
+            letter-spacing: 0.02em;
+        }
+
+        /* ---------------- 3. 滑动淡出卡片组件 ---------------- */
+        .scroll-card {
+            background: var(--card-bg);
+            padding: 48px;
+            margin-bottom: 60px;
+            border-radius: var(--card-radius); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.03);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s var(--easing), transform 0.8s var(--easing);
+        }
+
+        .scroll-card.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card-num {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: inline-block;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 2px;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 28px;
+            letter-spacing: -0.01em;
+        }
+
+        .note-list {
+            list-style: none;
+        }
+
+        .note-list li {
+            font-size: 1.05rem;
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        /* 方法栏布局 */
+        .method-container {
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid #eeeeee;
+            display: flex;
+            flex-direction: row; 
+            align-items: center; 
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .method-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--accent-color);
+            white-space: nowrap;
+        }
+
+        .method-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* 第四张卡片：垂直中轴箭头流容器 */
+        .center-tree-box {
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid #eeeeee;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+        }
+
+        .tree-header-inline {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        /* 改造为纯箭头连接流 */
+        .arrow-flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .flow-item {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background-color: #f1f2f4; /* 添加轻微色块增强UX卡片质感 */
+            padding: 8px 24px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            border-radius: 6px;
+        }
+
+        /* 下指箭头设计 */
+        .flow-arrow {
+            color: #dddddd;
+            font-size: 1.1rem;
+            margin: 8px 0;
+            font-family: monospace; /* 确保系统自带箭头字符完美居中不偏位 */
+            user-select: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 120px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        /* ---------------- 动画定义 ---------------- */
+        @keyframes fadeInPreset {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: translateY(0); }
+            50% { opacity: 0.9; transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 首页 -->
+    <div id="welcome-screen" onclick="enterSite()">
+        <div class="welcome-content">
+            <div class="click-to-learn">点击学习</div>
+            <h1 class="welcome-title">《点石成金：Web可用性设计秘笈》</h1>
+        </div>
+    </div>
+
+    <!-- 2. 主体内容区域 -->
+    <div class="main-content" id="main-content">
+        <header>
+            <div class="header-tag">UX Reading Notes</div>
+            <h1 class="main-title">《点石成金：Web可用性设计秘笈》</h1>
+            <div class="core-box">
+                <p><strong></strong> 一个可用性良好的网页，应让用户能“不假思索”就本能地明白如何使用</p>
+            </div>
+        </header>
+
+        <!-- 卡片 1 -->
+        <div class="scroll-card">
+            <span class="card-num">01</span>
+            <h2 class="card-title">第一定律</h2>
+            <ul class="note-list">
+                <li>别让用户思考，让用户本能地理解界面。</li>
+            </ul>
+            <div class="method-container">
+                <span class="method-label">方法</span>
+                <div class="method-text">删除问号：让页面不言而喻</div>
+            </div>
+        </div>
+
+        <!-- 卡片 2 -->
+        <div class="scroll-card">
+            <span class="card-num">02</span>
+            <h2 class="card-title">用户真相</h2>
+            <ul class="note-list">
+                <li>① 用户不阅读，而是扫描</li>
+                <li>② 用户不追求最佳选择，而是满意即可</li>
+                <li>③ 用户不探究工作原理，而是勉强应付</li>
+            </ul>
+            <div class="method-container">
+                <span class="method-label">方法</span>
+                <div class="method-text">为扫描而设计，而非为阅读而设计</div>
+            </div>
+        </div>
+
+        <!-- 卡片 3 -->
+        <div class="scroll-card">
+            <span class="card-num">03</span>
+            <h2 class="card-title">设计原则</h2>
+            <ul class="note-list">
+                <li>① 有效传达：建立清晰的视觉层次</li>
+                <li>② 利用惯例：提供显而易见的点击目标</li>
+                <li>③ 降低视觉噪声</li>
+            </ul>
+            <div class="method-container">
+                <span class="method-label">方法</span>
+                <div class="method-text">省略多余文字；确保可点击元素一目了然</div>
+            </div>
+        </div>
+
+        <!-- 卡片 4 -->
+        <div class="scroll-card">
+            <span class="card-num">04</span>
+            <h2 class="card-title">测试方法</h2>
+            <ul class="note-list">
+                <li><strong>克鲁格简易可用性测试</strong><br>不必复杂昂贵：尽早并频繁测试，找 3-5 个普通用户，让他们完成关键任务并观察其困惑点</li>
+            </ul>
+            
+            <!-- 升级：居中且向下指的箭头流程线 -->
+            <div class="center-tree-box">
+                <div class="tree-header-inline">
+                    <span class="method-label">方法</span>
+                    <div class="method-text">简易可用性测试</div>
+                </div>
+                
+                <div class="arrow-flow-container">
+                    <div class="flow-item">招募</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-item">给任务</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-item">保持沉默</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-item">观察与记录</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>DESIGN BY YOU · FRESHMAN WINTER VACATION MEMORIES</p>
+        </footer>
+    </div>
+
+    <!-- 3. 动效控制 JavaScript -->
+    <script>
+        function enterSite() {
+            const welcome = document.getElementById('welcome-screen');
+            const mainContent = document.getElementById('main-content');
+            
+            welcome.classList.add('fade-out');
+            mainContent.classList.add('visible');
+            
+            setTimeout(revealCards, 300);
+        }
+
+        const cards = document.querySelectorAll('.scroll-card');
+        
+        const observerOptions = {
+            root: null,
+            threshold: 0.1, 
+            rootMargin: "0px 0px -10px 0px"
+        };
+
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal');
+                } else {
+                    entry.target.classList.remove('reveal'); // 保持往返滚动均可重复触发动效
+                }
+            });
+        }, observerOptions);
+
+        cards.forEach(card => {
+            cardObserver.observe(card);
+        });
+
+        function revealCards() {
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                if (cardTop < window.innerHeight * 0.9) {
+                    card.classList.add('reveal');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
